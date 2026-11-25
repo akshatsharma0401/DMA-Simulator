@@ -1,0 +1,9 @@
+# Compiled C++ executables
+*.exe
+*.out
+mem_sim
+
+# OS & VS Code workspace files
+.DS_Store
+Thumbs.db
+.vscode/

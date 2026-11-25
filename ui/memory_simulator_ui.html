@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSE234 — Dynamic Memory Allocation Simulator (Project #8)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-alt: #0b1120;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --teal: #14b8a6;
+      --teal-dark: #0d9488;
+      --coral: #f97316;
+      --blue: #38bdf8;
+      --purple: #a78bfa;
+      --emerald: #34d399;
+      --rose: #fb7185;
+      --amber: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .title-block h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .title-block p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(20, 184, 166, 0.15);
+      color: var(--teal);
+      border: 1px solid rgba(20, 184, 166, 0.35);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    .preset-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.18s ease;
+    }
+
+    .btn-primary {
+      background: var(--teal);
+      color: #042f2e;
+    }
+    .btn-primary:hover {
+      background: #2dd4bf;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .btn-danger {
+      background: rgba(251, 113, 133, 0.15);
+      color: var(--rose);
+      border: 1px solid rgba(251, 113, 133, 0.35);
+    }
+    .btn-danger:hover {
+      background: rgba(251, 113, 133, 0.28);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 860px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--teal);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* Visual RAM Bar */
+    .algo-section {
+      margin-bottom: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .algo-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .algo-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .algo-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .algo-stats span strong {
+      color: #fff;
+    }
+
+    .ram-bar {
+      display: flex;
+      width: 100%;
+      height: 54px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .ram-segment {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      border-right: 2px solid var(--bg);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 4px;
+      text-align: center;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: all 0.25s ease;
+    }
+
+    .ram-segment:last-child {
+      border-right: none;
+    }
+
+    .ram-free {
+      background: repeating-linear-gradient(
+        45deg,
+        #0f172a,
+        #0f172a 8px,
+        #1e293b 8px,
+        #1e293b 16px
+      );
+      color: var(--muted);
+    }
+
+    .ram-allocated {
+      color: #0f172a;
+      cursor: pointer;
+    }
+
+    .ram-allocated:hover {
+      filter: brightness(1.1);
+      transform: scaleY(0.96);
+    }
+
+    .proc-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .pill-ok {
+      background: rgba(52, 211, 153, 0.14);
+      color: var(--emerald);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .pill-fail {
+      background: rgba(251, 113, 133, 0.14);
+      color: var(--rose);
+      border: 1px solid rgba(251, 113, 133, 0.35);
+    }
+
+    /* Comparison Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface-alt);
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .live-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .live-controls input {
+      width: 160px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-block">
+        <div>
+          <span class="badge">CSE234 — Operating Systems</span>
+          <span class="badge">CO4 • L3 / L4 / L5</span>
+        </div>
+        <h1 style="margin-top: 8px;">Dynamic Memory Allocation Simulator (Project #8)</h1>
+        <p>Interactive visual comparison of First Fit, Best Fit, and Worst Fit with dynamic partition splitting &amp; hole coalescing.</p>
+      </div>
+      <div class="preset-group">
+        <button class="btn-secondary" onclick="loadPreset(1)">Load Test Case 1</button>
+        <button class="btn-secondary" onclick="loadPreset(2)">Load Test Case 2 (Best Fit Win)</button>
+      </div>
+    </header>
+
+    <!-- Configuration Inputs -->
+    <div class="grid-2">
+      <div class="card">
+        <h2>1. Initial Memory Partitions (KB)</h2>
+        <div class="input-row">
+          <input type="text" id="blocksInput" value="100, 500, 200, 300, 600" placeholder="e.g., 100, 500, 200, 300, 600" />
+        </div>
+        <p class="hint">Comma-separated partition sizes in KB. Total RAM is computed automatically.</p>
+      </div>
+
+      <div class="card">
+        <h2>2. Incoming Process Queue (KB)</h2>
+        <div class="input-row">
+          <input type="text" id="procsInput" value="212, 417, 112, 426" placeholder="e.g., 212, 417, 112, 426" />
+          <button class="btn-primary" style="white-space: nowrap;" onclick="runAllSimulations()">Run Simulation</button>
+        </div>
+        <p class="hint">Processes are named P1, P2, P3... in order. Click any colored block below to terminate &amp; coalesce.</p>
+      </div>
+    </div>
+
+    <!-- Visual Algorithm Results -->
+    <div id="resultsContainer"></div>
+
+    <!-- Comparative Summary Table -->
+    <div class="card" style="margin-top: 24px;">
+      <h2>Side-by-Side Evaluation Metrics</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Evaluation Metric</th>
+              <th>First Fit</th>
+              <th>Best Fit</th>
+              <th>Worst Fit</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PALETTE = ['#38bdf8', '#34d399', '#fbbf24', '#a78bfa', '#f472b6', '#fb923c', '#2dd4bf', '#818cf8'];
+
+    // Mirrors the C++ MemorySimulator class exact logic
+    class MemorySimulatorEngine {
+      constructor(initialPartitions) {
+        this.initialPartitions = [...initialPartitions];
+        this.reset();
+      }
+
+      reset() {
+        this.comparisons = 0;
+        this.memory = this.initialPartitions.map((size, idx) => ({
+          blockId: idx + 1,
+          size: size,
+          isFree: true,
+          processId: -1
+        }));
+      }
+
+      assignBlock(index, proc) {
+        const originalBlockId = this.memory[index].blockId;
+        const leftover = this.memory[index].size - proc.size;
+
+        this.memory[index].size = proc.size;
+        this.memory[index].isFree = false;
+        this.memory[index].processId = proc.processId;
+
+        proc.isAllocated = true;
+        proc.allocatedBlockId = originalBlockId;
+
+        if (leftover > 0) {
+          this.memory.splice(index + 1, 0, {
+            blockId: originalBlockId,
+            size: leftover,
+            isFree: true,
+            processId: -1
+          });
+        }
+      }
+
+      allocateFirstFit(proc) {
+        for (let i = 0; i < this.memory.length; i++) {
+          this.comparisons++;
+          if (this.memory[i].isFree && this.memory[i].size >= proc.size) {
+            this.assignBlock(i, proc);
+            return true;
+          }
+        }
+        return false;
+      }
+
+      allocateBestFit(proc) {
+        let bestIdx = -1;
+        for (let i = 0; i < this.memory.length; i++) {
+          this.comparisons++;
+          if (this.memory[i].isFree && this.memory[i].size >= proc.size) {
+            if (bestIdx === -1 || this.memory[i].size < this.memory[bestIdx].size) {
+              bestIdx = i;
+            }
+          }
+        }
+        if (bestIdx !== -1) {
+          this.assignBlock(bestIdx, proc);
+          return true;
+        }
+        return false;
+      }
+
+      allocateWorstFit(proc) {
+        let worstIdx = -1;
+        for (let i = 0; i < this.memory.length; i++) {
+          this.comparisons++;
+          if (this.memory[i].isFree && this.memory[i].size >= proc.size) {
+            if (worstIdx === -1 || this.memory[i].size > this.memory[worstIdx].size) {
+              worstIdx = i;
+            }
+          }
+        }
+        if (worstIdx !== -1) {
+          this.assignBlock(worstIdx, proc);
+          return true;
+        }
+        return false;
+      }
+
+      deallocateProcess(pid) {
+        let found = false;
+        for (const block of this.memory) {
+          if (!block.isFree && block.processId === pid) {
+            block.isFree = true;
+            block.processId = -1;
+            found = true;
+          }
+        }
+        if (!found) return false;
+
+        // Adjacent free hole coalescing
+        let i = 0;
+        while (i + 1 < this.memory.length) {
+          if (this.memory[i].isFree && this.memory[i + 1].isFree) {
+            this.memory[i].size += this.memory[i + 1].size;
+            this.memory.splice(i + 1, 1);
+          } else {
+            i++;
+          }
+        }
+        return true;
+      }
+
+      getMetrics(algoName, procs) {
+        let totalMem = 0, usedMem = 0, freeMem = 0, largestHole = 0;
+        for (const b of this.memory) {
+          totalMem += b.size;
+          if (b.isFree) {
+            freeMem += b.size;
+            largestHole = Math.max(largestHole, b.size);
+          } else {
+            usedMem += b.size;
+          }
+        }
+
+        const allocatedCount = procs.filter(p => p.isAllocated).length;
+        const hasUnallocated = procs.some(p => !p.isAllocated && !p.terminated);
+        const utilizationPct = totalMem > 0 ? ((usedMem / totalMem) * 100).toFixed(2) : '0.00';
+        const externalFragmentation = hasUnallocated ? freeMem : 0;
+
+        return {
+          algoName,
+          allocatedCount,
+          totalProcesses: procs.length,
+          usedMem,
+          totalMem,
+          utilizationPct,
+          freeMem,
+          largestHole,
+          externalFragmentation,
+          comparisons: this.comparisons
+        };
+      }
+    }
+
+    let state = {
+      first: null,
+      best: null,
+      worst: null
+    };
+
+    function parseSizes(str) {
+      return str
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n) && n > 0);
+    }
+
+    function loadPreset(num) {
+      document.getElementById('blocksInput').value = '100, 500, 200, 300, 600';
+      document.getElementById('procsInput').value = num === 1
+        ? '212, 417, 112, 426'
+        : '212, 417, 112, 550';
+      runAllSimulations();
+    }
+
+    function runAllSimulations() {
+      const blocks = parseSizes(document.getElementById('blocksInput').value);
+      const procSizes = parseSizes(document.getElementById('procsInput').value);
+
+      if (blocks.length === 0 || procSizes.length === 0) {
+        alert('Please enter valid positive numbers for both memory blocks and processes.');
+        return;
+      }
+
+      const modes = [
+        { key: 'first', name: 'First Fit', method: 'allocateFirstFit' },
+        { key: 'best', name: 'Best Fit', method: 'allocateBestFit' },
+        { key: 'worst', name: 'Worst Fit', method: 'allocateWorstFit' }
+      ];
+
+      modes.forEach(m => {
+        const sim = new MemorySimulatorEngine(blocks);
+        const procs = procSizes.map((sz, i) => ({
+          processId: i + 1,
+          size: sz,
+          isAllocated: false,
+          terminated: false,
+          allocatedBlockId: -1
+        }));
+
+        procs.forEach(p => sim[m.method](p));
+        state[m.key] = { name: m.name, method: m.method, sim, procs };
+      });
+
+      renderAll();
+    }
+
+    function terminateProcess(modeKey, pid) {
+      const entry = state[modeKey];
+      if (!entry) return;
+      if (entry.sim.deallocateProcess(pid)) {
+        const p = entry.procs.find(item => item.processId === pid);
+        if (p) {
+          p.isAllocated = false;
+          p.terminated = true;
+        }
+        renderAll();
+      }
+    }
+
+    function addDynamicProcess(modeKey) {
+      const input = document.getElementById(`addInput-${modeKey}`);
+      const sz = parseInt(input.value, 10);
+      if (isNaN(sz) || sz <= 0) return;
+
+      const entry = state[modeKey];
+      const nextId = entry.procs.length + 1;
+      const newProc = {
+        processId: nextId,
+        size: sz,
+        isAllocated: false,
+        terminated: false,
+        allocatedBlockId: -1
+      };
+      entry.sim[entry.method](newProc);
+      entry.procs.push(newProc);
+      input.value = '';
+      renderAll();
+    }
+
+    function renderAll() {
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '';
+
+      const entries = [
+        { key: 'first', data: state.first },
+        { key: 'best', data: state.best },
+        { key: 'worst', data: state.worst }
+      ];
+
+      const metricsList = [];
+
+      entries.forEach(({ key, data }) => {
+        const m = data.sim.getMetrics(data.name, data.procs);
+        metricsList.push(m);
+
+        const section = document.createElement('div');
+        section.className = 'algo-section';
+
+        const barSegments = data.sim.memory.map(b => {
+          const widthPct = (b.size / m.totalMem) * 100;
+          if (b.isFree) {
+            return `<div class="ram-segment ram-free" style="width:${widthPct}%" title="Free Hole: ${b.size} KB">
+              <span>FREE</span>
+              <span>${b.size} KB</span>
+            </div>`;
+          } else {
+            const color = PALETTE[(b.processId - 1) % PALETTE.length];
+            return `<div class="ram-segment ram-allocated" style="width:${widthPct}%; background:${color};"
+              onclick="terminateProcess('${key}', ${b.processId})"
+              title="Click to terminate P${b.processId} (${b.size} KB) & coalesce holes">
+              <span>P${b.processId}</span>
+              <span>${b.size} KB</span>
+            </div>`;
+          }
+        }).join('');
+
+        const pills = data.procs.map(p => {
+          if (p.terminated) {
+            return `<span class="pill" style="background:#334155; color:#cbd5e1;">P${p.processId} (${p.size} KB): Terminated</span>`;
+          }
+          return p.isAllocated
+            ? `<span class="pill pill-ok">P${p.processId} (${p.size} KB) → Block #${p.allocatedBlockId}</span>`
+            : `<span class="pill pill-fail">P${p.processId} (${p.size} KB) → Failed</span>`;
+        }).join('');
+
+        section.innerHTML = `
+          <div class="algo-header">
+            <div class="algo-title">${data.name}</div>
+            <div class="algo-stats">
+              <span>Utilization: <strong>${m.utilizationPct}%</strong> (${m.usedMem}/${m.totalMem} KB)</span>
+              <span>Largest Hole: <strong>${m.largestHole} KB</strong></span>
+              <span>Ext. Frag: <strong>${m.externalFragmentation} KB</strong></span>
+              <span>Comparisons: <strong>${m.comparisons}</strong></span>
+            </div>
+          </div>
+          <div class="ram-bar">${barSegments}</div>
+          <div class="proc-pills">${pills}</div>
+          <div class="live-controls">
+            <input type="number" id="addInput-${key}" placeholder="New process KB" min="1" />
+            <button class="btn-secondary" onclick="addDynamicProcess('${key}')">+ Allocate to ${data.name}</button>
+            <span class="hint">Tip: Click any colored process block in the bar above to free it and merge adjacent holes.</span>
+          </div>
+        `;
+
+        container.appendChild(section);
+      });
+
+      // Render Comparison Table
+      const tbody = document.getElementById('comparisonTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td><strong>Processes Allocated</strong></td>
+          ${metricsList.map(m => `<td>${m.allocatedCount} / ${m.totalProcesses}</td>`).join('')}
+        </tr>
+        <tr>
+          <td><strong>Memory Utilization (%)</strong></td>
+          ${metricsList.map(m => `<td><strong>${m.utilizationPct}%</strong> (${m.usedMem} KB)</td>`).join('')}
+        </tr>
+        <tr>
+          <td><strong>Total Free Memory</strong></td>
+          ${metricsList.map(m => `<td>${m.freeMem} KB</td>`).join('')}
+        </tr>
+        <tr>
+          <td><strong>Largest Contiguous Free Hole</strong></td>
+          ${metricsList.map(m => `<td>${m.largestHole} KB</td>`).join('')}
+        </tr>
+        <tr>
+          <td><strong>External Fragmentation</strong></td>
+          ${metricsList.map(m => `<td>${m.externalFragmentation} KB</td>`).join('')}
+        </tr>
+        <tr>
+          <td><strong>Block Comparisons (Search Overhead)</strong></td>
+          ${metricsList.map(m => `<td>${m.comparisons} comparisons</td>`).join('')}
+        </tr>
+      `;
+    }
+
+    // Initialize on load
+    runAllSimulations();
+  </script>
+</body>
+</html>
