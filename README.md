@@ -66,14 +66,11 @@ This project implements a fair benchmarking environment that executes **First Fi
 Requires any standard C++ compiler supporting C++17 (`g++`, `clang++`, or MSVC).
 
 ```bash
-# 1. Clone the repository
-git clone [https://github.com/](https://github.com/)<your-username>/cse234-dynamic-memory-simulator.git
-cd cse234-dynamic-memory-simulator
 
-# 2. Compile
+# 1. Compile
 g++ -std=c++17 src/main.cpp -o mem_sim
 
-# 3. Run (Windows)
+# 2. Run (Windows)
 mem_sim.exe
 
 # 3. Run (Linux / macOS)
